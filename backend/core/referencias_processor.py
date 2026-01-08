@@ -16,7 +16,7 @@ from typing import List, Dict, Optional, Tuple
 from gensim.models import Word2Vec
 from sentence_transformers import SentenceTransformer
 from dataclasses import dataclass
-from .text_processor import ProcessadorTexto
+from .text_processor import TextProcessor
 
 
 @dataclass
@@ -28,12 +28,12 @@ class Referencia:
     tags: Optional[List[str]] = None
 
 
-class ProcessadorReferencias:
+class ReferenceProcessor:
     """
-    Processa referências de vídeos de sucesso para criar o universo semântico do canal.
+    Processes success video references to create the channel's semantic universe.
 
-    Este é o ponto de entrada OBRIGATÓRIO para criação de canais.
-    Sem referências, não há como criar o modelo Word2Vec personalizado.
+    This is the MANDATORY entry point for channel creation.
+    Without references, there's no way to create the personalized Word2Vec model.
     """
 
     def __init__(self):
@@ -49,8 +49,8 @@ class ProcessadorReferencias:
         # Referências processadas
         self.referencias_virais: List[Dict] = []
 
-        # Processador de texto com stopwords
-        self.text_processor = ProcessadorTexto()
+        # Text processor with stopwords
+        self.text_processor = TextProcessor()
 
     def processar_referencias(
         self,
@@ -152,7 +152,7 @@ class ProcessadorReferencias:
         """
         Tokeniza texto removendo stopwords e mantendo apenas termos relevantes.
 
-        Usa o ProcessadorTexto para filtrar pronomes, conectivos, etc.
+        Uses TextProcessor to filter pronouns, connectives, etc.
         """
         # Usa o processador para tokenizar removendo stopwords críticas
         tokens = self.text_processor.tokenizar_para_word2vec(texto)

@@ -83,10 +83,10 @@ class ChannelService:
 
     def _extract_initial_keywords(self, description: str, sub_niche: str) -> List[str]:
         """Extrai palavras-chave iniciais usando processador de texto"""
-        from core.text_processor import ProcessadorTexto
+        from core.text_processor import TextProcessor
 
         # Cria processador
-        processor = ProcessadorTexto()
+        processor = TextProcessor()
 
         # Extrai palavras-chave da descrição
         palavras_desc = processor.extrair_palavras_chave(

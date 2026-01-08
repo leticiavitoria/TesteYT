@@ -11,10 +11,10 @@ import re
 from collections import defaultdict
 
 try:
-    from .text_processor import ProcessadorTexto
+    from .text_processor import TextProcessor
 except ImportError:
-    # Fallback se o módulo não existir ainda
-    class ProcessadorTexto:
+    # Fallback if module doesn't exist yet
+    class TextProcessor:
         def tokenizar_para_word2vec(self, texto):
             return texto.lower().split()
         def extrair_palavras_chave(self, texto, **kwargs):
@@ -53,8 +53,8 @@ class AdaptiveVectorAnalyzer:
         # Corpus para treinar Word2Vec
         self.training_corpus = []
 
-        # Processador de texto com stopwords
-        self.text_processor = ProcessadorTexto()
+        # Text processor with stopwords
+        self.text_processor = TextProcessor()
 
     def add_training_data(self, text: str, content_type: str):
         """

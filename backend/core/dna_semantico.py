@@ -22,10 +22,10 @@ import json
 
 
 @dataclass
-class ComponenteVetorial:
+class VectorComponent:
     """
-    Representa um componente do DNA Semântico (T, V, D, H ou U).
-    Armazena todos os vetores individuais e calcula o centroide.
+    Represents a Semantic DNA component (T, V, D, H or U).
+    Stores all individual vectors and calculates the centroid.
     """
     nome: str
     vetores: List[np.ndarray] = field(default_factory=list)
@@ -87,16 +87,16 @@ class ComponenteVetorial:
         }
 
 
-class DNASemanticoCanal:
+class ChannelSemanticDNA:
     """
-    Implementa o DNA Semântico do Canal conforme especificado no documento técnico.
+    Implements the Channel Semantic DNA as specified in the technical document.
 
-    O DNA é composto por 5 componentes vetoriais, cada um representando
-    um aspecto dos metadados e conteúdo do canal:
+    The DNA is composed of 5 vector components, each representing
+    an aspect of the channel's metadata and content:
 
     Y = w_T * T + w_V * V + w_D * D + w_H * H + w_U * U
 
-    A coerência vetorial entre componentes determina a "força" do DNA.
+    Vector coherence between components determines the DNA's "strength".
     """
 
     def __init__(self, pesos: Optional[Dict[str, float]] = None):
@@ -107,12 +107,12 @@ class DNASemanticoCanal:
             pesos: Dicionário com pesos para cada componente.
                    Se None, usa pesos padrão baseados no documento.
         """
-        # Componentes vetoriais
-        self.T = ComponenteVetorial(nome='Títulos', peso=0.30)
-        self.V = ComponenteVetorial(nome='Vídeos/Roteiros', peso=0.30)
-        self.D = ComponenteVetorial(nome='Descrições', peso=0.20)
-        self.H = ComponenteVetorial(nome='Hashtags/Tags', peso=0.15)
-        self.U = ComponenteVetorial(nome='Thumbnails', peso=0.05)
+        # Vector components
+        self.T = VectorComponent(nome='Títulos', peso=0.30)
+        self.V = VectorComponent(nome='Vídeos/Roteiros', peso=0.30)
+        self.D = VectorComponent(nome='Descrições', peso=0.20)
+        self.H = VectorComponent(nome='Hashtags/Tags', peso=0.15)
+        self.U = VectorComponent(nome='Thumbnails', peso=0.05)
 
         # Aplica pesos personalizados se fornecidos
         if pesos:

@@ -16,10 +16,10 @@ from dataclasses import dataclass
 
 
 @dataclass
-class AnaliseCompleta:
+class CompleteAnalysis:
     """
-    Resultado de uma análise completa de título ou roteiro.
-    Implementa a estrutura de saída definida na Parte 6.
+    Result of a complete title or script analysis.
+    Implements the output structure defined in Part 6.
     """
     conteudo_analisado: str
     tipo: str  # 'titulo' ou 'roteiro'
@@ -45,16 +45,16 @@ class AnaliseCompleta:
     proximos_passos: List[str]
 
 
-class AnalisadorMetricasAvancadas:
+class AdvancedMetricsAnalyzer:
     """
-    Analisador que gera métricas avançadas conforme especificação técnica.
+    Analyzer that generates advanced metrics according to technical specification.
     """
 
     def __init__(self, dna_canal, modelo_word2vec=None):
         """
         Args:
-            dna_canal: Instância de DNASemanticoCanal
-            modelo_word2vec: Modelo Word2Vec treinado com referências
+            dna_canal: Instance of ChannelSemanticDNA
+            modelo_word2vec: Word2Vec model trained with references
         """
         self.dna_canal = dna_canal
         self.modelo_word2vec = modelo_word2vec
@@ -64,7 +64,7 @@ class AnalisadorMetricasAvancadas:
         titulo: str,
         vetor_titulo: np.ndarray,
         titulos_virais_referencia: Optional[List[Dict]] = None
-    ) -> AnaliseCompleta:
+    ) -> CompleteAnalysis:
         """
         Analisa um título gerando todas as métricas avançadas.
 
@@ -75,7 +75,7 @@ class AnalisadorMetricasAvancadas:
                                       [{'texto': str, 'vetor': np.ndarray}, ...]
 
         Returns:
-            AnaliseCompleta com todas as métricas
+            CompleteAnalysis com todas as métricas
         """
 
         # 1. Similaridade com DNA do Canal
@@ -155,7 +155,7 @@ class AnalisadorMetricasAvancadas:
             impacto
         )
 
-        return AnaliseCompleta(
+        return CompleteAnalysis(
             conteudo_analisado=titulo,
             tipo='titulo',
             score_numerico=score_numerico,
@@ -178,7 +178,7 @@ class AnalisadorMetricasAvancadas:
         roteiro: str,
         vetor_titulo: np.ndarray,
         vetor_roteiro: np.ndarray
-    ) -> AnaliseCompleta:
+    ) -> CompleteAnalysis:
         """
         Analisa um roteiro em relação ao título e ao DNA do canal.
 
@@ -189,7 +189,7 @@ class AnalisadorMetricasAvancadas:
             vetor_roteiro: Embedding do roteiro
 
         Returns:
-            AnaliseCompleta com todas as métricas
+            CompleteAnalysis com todas as métricas
         """
 
         # 1. Coerência Título-Roteiro
@@ -258,7 +258,7 @@ class AnalisadorMetricasAvancadas:
             impacto
         )
 
-        return AnaliseCompleta(
+        return CompleteAnalysis(
             conteudo_analisado=roteiro[:200] + '...',  # Trunca para exibição
             tipo='roteiro',
             score_numerico=score_numerico,

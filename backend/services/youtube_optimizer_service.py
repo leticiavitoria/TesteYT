@@ -20,9 +20,9 @@ from typing import Dict, List, Optional
 import numpy as np
 from datetime import datetime
 
-from core.dna_semantico import DNASemanticoCanal
-from core.referencias_processor import ProcessadorReferencias, Referencia
-from core.metricas_avancadas import AnalisadorMetricasAvancadas, AnaliseCompleta
+from core.dna_semantico import ChannelSemanticDNA
+from core.referencias_processor import ReferenceProcessor, Referencia
+from core.metricas_avancadas import AdvancedMetricsAnalyzer, CompleteAnalysis
 from models.channel import Channel
 from sentence_transformers import SentenceTransformer
 
@@ -45,9 +45,9 @@ class YouTubeOptimizerService:
         self.sentence_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
         # Componentes principais
-        self.processador_referencias: Optional[ProcessadorReferencias] = None
-        self.dna_canal: Optional[DNASemanticoCanal] = None
-        self.analisador_metricas: Optional[AnalisadorMetricasAvancadas] = None
+        self.processador_referencias: Optional[ReferenceProcessor] = None
+        self.dna_canal: Optional[ChannelSemanticDNA] = None
+        self.analisador_metricas: Optional[AdvancedMetricsAnalyzer] = None
 
         # Canal atual
         self.canal_atual: Optional[Channel] = None
@@ -116,7 +116,7 @@ class YouTubeOptimizerService:
 
         # 1. PROCESSAMENTO DE REFERÊNCIAS
         print("🔄 Processando referências e treinando Word2Vec...")
-        self.processador_referencias = ProcessadorReferencias()
+        self.processador_referencias = ReferenceProcessor()
 
         resultado_processamento = self.processador_referencias.processar_referencias(
             referencias=refs_processadas,
@@ -126,7 +126,7 @@ class YouTubeOptimizerService:
 
         # 2. CRIAÇÃO DO DNA SEMÂNTICO INICIAL
         print("🧬 Criando DNA Semântico do Canal...")
-        self.dna_canal = DNASemanticoCanal()
+        self.dna_canal = ChannelSemanticDNA()
 
         # Adiciona embeddings das referências ao DNA inicial
         for ref in resultado_processamento['referencias_virais']:
@@ -154,7 +154,7 @@ class YouTubeOptimizerService:
         self.referencias_virais = resultado_processamento['referencias_virais']
 
         # 3. CRIA ANALISADOR DE MÉTRICAS
-        self.analisador_metricas = AnalisadorMetricasAvancadas(
+        self.analisador_metricas = AdvancedMetricsAnalyzer(
             dna_canal=self.dna_canal,
             modelo_word2vec=resultado_processamento['word2vec_model']
         )

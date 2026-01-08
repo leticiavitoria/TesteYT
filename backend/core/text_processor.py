@@ -14,16 +14,16 @@ from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-class ProcessadorTexto:
+class TextProcessor:
     """
-    Processa texto extraindo termos relevantes usando análise estatística.
+    Processes text extracting relevant terms using statistical analysis.
 
-    **AGNÓSTICO DE IDIOMA** - Funciona com inglês, português, espanhol, etc.
+    **LANGUAGE-AGNOSTIC** - Works with English, Portuguese, Spanish, etc.
 
-    Usa:
-    - TF-IDF para identificar termos importantes
-    - Análise de frequência contextual
-    - Heurísticas estatísticas (comprimento, variância, etc)
+    Uses:
+    - TF-IDF to identify important terms
+    - Contextual frequency analysis
+    - Statistical heuristics (length, variance, etc)
     """
 
     def __init__(self):
