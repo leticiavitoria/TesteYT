@@ -401,10 +401,10 @@ if __name__ == '__main__':
     print("✅ Simulação de Impacto no Embedding")
     print("✅ Probabilidades de Entrega e Escala")
     print("")
-    print("📡 Servidor iniciando em http://localhost:5001")
-    print("📖 Documentação: http://localhost:5001/api/v2/documentacao")
+    print("📡 Servidor iniciando em http://localhost:5000")
+    print("📖 Documentação: http://localhost:5000/api/v2/documentacao")
     print("")
     print("=" * 80)
 
-    # Usa porta 5001 para não conflitar com o main.py original
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    # Usa porta 5000 para não conflitar com o main.py original
+    app.run(debug=True, host='0.0.0.0', port=5000)
