@@ -16,6 +16,7 @@ from typing import List, Dict, Optional, Tuple
 from gensim.models import Word2Vec
 from sentence_transformers import SentenceTransformer
 from dataclasses import dataclass
+from .text_processor import ProcessadorTexto
 
 
 @dataclass
@@ -47,6 +48,9 @@ class ProcessadorReferencias:
 
         # Referências processadas
         self.referencias_virais: List[Dict] = []
+
+        # Processador de texto com stopwords
+        self.text_processor = ProcessadorTexto()
 
     def processar_referencias(
         self,
@@ -146,23 +150,14 @@ class ProcessadorReferencias:
 
     def _tokenizar(self, texto: str) -> List[str]:
         """
-        Tokeniza texto mantendo contexto semântico.
+        Tokeniza texto removendo stopwords e mantendo apenas termos relevantes.
 
-        Não usa stopwords! O Word2Vec precisa de contexto completo.
+        Usa o ProcessadorTexto para filtrar pronomes, conectivos, etc.
         """
-        # Lowercase
-        texto = texto.lower()
+        # Usa o processador para tokenizar removendo stopwords críticas
+        tokens = self.text_processor.tokenizar_para_word2vec(texto)
 
-        # Remove caracteres especiais mas mantém estrutura
-        texto = re.sub(r'[^\w\s]', ' ', texto)
-
-        # Tokeniza
-        tokens = texto.split()
-
-        # Remove tokens muito curtos (< 2 caracteres)
-        tokens = [t for t in tokens if len(t) >= 2]
-
-        return tokens
+        return tokens if tokens else texto.split()  # Fallback se filtrar tudo
 
     def _dividir_em_sentencas(self, texto: str) -> List[str]:
         """Divide texto em sentenças"""
@@ -244,6 +239,7 @@ class ProcessadorReferencias:
         Extrai as palavras mais características do nicho.
 
         Usa frequência + centralidade no grafo semântico do Word2Vec.
+        Remove stopwords e termos irrelevantes.
         """
         if not self.word2vec_model:
             return []
@@ -259,7 +255,25 @@ class ProcessadorReferencias:
         # Para cada palavra frequente, calcula sua centralidade semântica
         vocabulario = []
 
-        for palavra, freq in freq_palavras.most_common(top_n * 2):
+        # Prepara corpus para TF-IDF (todas as sentenças do corpus)
+        corpus_para_tfidf = [' '.join(sentenca) for sentenca in self.corpus_referencias]
+
+        for palavra, freq in freq_palavras.most_common(top_n * 3):  # Pega mais para filtrar
+            # Pula palavras muito curtas ou apenas números
+            if len(palavra) < 3 or palavra.isdigit():
+                continue
+
+            # Filtra palavras usando TF-IDF (agnóstico de idioma)
+            relevancia = self.text_processor.calcular_relevancia_termo(
+                palavra,
+                corpus_para_tfidf,
+                frequencia_minima=1
+            )
+
+            # Se relevância é muito baixa (palavra muito comum), pula
+            if relevancia < 0.01:
+                continue
+
             if palavra not in self.word2vec_model.wv:
                 continue
 
