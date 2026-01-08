@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Channel Vector Optimizer</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 YouTube Channel Vector Optimizer</h1>
+            <p class="subtitle">Sistema Adaptativo de Otimização de Conteúdo com Word2Vec e NLP</p>
+        </header>
+
+        <!-- Seleção de Canal -->
+        <section id="channel-selection" class="section active">
+            <h2>Bem-vindo!</h2>
+            <div class="button-group">
+                <button onclick="app.showCreateChannel()" class="btn btn-primary">
+                    ➕ Criar Novo Canal
+                </button>
+                <button onclick="app.showLoadChannel()" class="btn btn-secondary">
+                    📂 Carregar Canal Existente
+                </button>
+            </div>
+        </section>
+
+        <!-- Criar Novo Canal -->
+        <section id="create-channel" class="section">
+            <h2>Criar Novo Canal</h2>
+            <form id="create-channel-form">
+                <div class="form-group">
+                    <label for="channel-name">Nome do Canal *</label>
+                    <input type="text" id="channel-name" required placeholder="Ex: TechMaster">
+                </div>
+
+                <div class="form-group">
+                    <label for="sub-niche">Subnicho / Tema Principal *</label>
+                    <input type="text" id="sub-niche" required placeholder="Ex: Programação Python, História do Brasil, True Crime">
+                </div>
+
+                <div class="form-group">
+                    <label for="channel-description">Descrição do Canal / Ideia *</label>
+                    <textarea id="channel-description" rows="5" required placeholder="Descreva a proposta do canal, o tipo de conteúdo que pretende criar, público-alvo, etc."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" onclick="app.goBack('channel-selection')" class="btn btn-secondary">← Voltar</button>
+                    <button type="submit" class="btn btn-primary">Criar Canal →</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Carregar Canal Existente -->
+        <section id="load-channel" class="section">
+            <h2>Canais Existentes</h2>
+            <div id="channels-list" class="channels-grid">
+                <p class="loading">Carregando canais...</p>
+            </div>
+            <button onclick="app.goBack('channel-selection')" class="btn btn-secondary">← Voltar</button>
+        </section>
+
+        <!-- Treinar Sistema -->
+        <section id="train-system" class="section">
+            <h2>Treinar Sistema com Exemplos</h2>
+            <div class="info-box">
+                <p>📚 Adicione títulos de exemplo para o sistema aprender os padrões do seu canal.</p>
+                <p>Pode ser títulos do próprio canal ou de canais similares de sucesso.</p>
+            </div>
+
+            <div class="form-group">
+                <label>Adicionar Títulos de Exemplo (um por linha)</label>
+                <textarea id="example-titles" rows="10" placeholder="Cole títulos de exemplo aqui, um por linha...
+
+Exemplo:
+Como Programar em Python - Tutorial Completo
+5 Dicas para Aprender Programação Mais Rápido
+O Que Ninguém Te Conta Sobre Ser Programador"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button onclick="app.skipTraining()" class="btn btn-secondary">Pular Treinamento</button>
+                <button onclick="app.trainSystem()" class="btn btn-primary">Treinar Sistema →</button>
+            </div>
+
+            <div id="training-results" class="results-box" style="display: none;"></div>
+        </section>
+
+        <!-- Dashboard Principal -->
+        <section id="dashboard" class="section">
+            <div class="dashboard-header">
+                <div>
+                    <h2 id="current-channel-name">Canal</h2>
+                    <p id="current-channel-info" class="text-muted"></p>
+                </div>
+                <button onclick="app.showChannelSummary()" class="btn btn-sm">📊 Ver Resumo</button>
+            </div>
+
+            <div class="workflow-steps">
+                <div class="step" onclick="app.showValidateTitle()">
+                    <div class="step-number">1</div>
+                    <h3>Validar Título</h3>
+                    <p>Teste seu título e veja análise de risco</p>
+                </div>
+                <div class="step" onclick="app.showGenerateScript()">
+                    <div class="step-number">2</div>
+                    <h3>Gerar Prompt de Roteiro</h3>
+                    <p>Crie prompt otimizado para roteiro</p>
+                </div>
+                <div class="step" onclick="app.showValidateScript()">
+                    <div class="step-number">3</div>
+                    <h3>Validar Roteiro</h3>
+                    <p>Valide coerência do roteiro</p>
+                </div>
+                <div class="step" onclick="app.showGenerateContent()">
+                    <div class="step-number">4</div>
+                    <h3>Gerar Conteúdo</h3>
+                    <p>Descrição, tags e thumbnail</p>
+                </div>
+            </div>
+
+            <button onclick="app.goBack('channel-selection')" class="btn btn-secondary mt-20">← Trocar Canal</button>
+        </section>
+
+        <!-- Validar Título -->
+        <section id="validate-title" class="section">
+            <h2>Validar Título</h2>
+
+            <div class="form-group">
+                <label for="title-input">Digite o Título</label>
+                <input type="text" id="title-input" placeholder="Ex: 5 Dicas Para...">
+            </div>
+
+            <div class="button-group">
+                <button onclick="app.goBack('dashboard')" class="btn btn-secondary">← Voltar</button>
+                <button onclick="app.validateTitle()" class="btn btn-primary">Analisar Título</button>
+            </div>
+
+            <div id="title-analysis-results" class="results-box" style="display: none;"></div>
+        </section>
+
+        <!-- Gerar Prompt de Roteiro -->
+        <section id="generate-script" class="section">
+            <h2>Gerar Prompt de Roteiro</h2>
+
+            <div class="form-group">
+                <label for="approved-title">Título Aprovado</label>
+                <input type="text" id="approved-title" placeholder="Cole o título aprovado aqui">
+            </div>
+
+            <div class="button-group">
+                <button onclick="app.goBack('dashboard')" class="btn btn-secondary">← Voltar</button>
+                <button onclick="app.generateScriptPrompt()" class="btn btn-primary">Gerar Prompt</button>
+            </div>
+
+            <div id="script-prompt-results" class="results-box" style="display: none;"></div>
+        </section>
+
+        <!-- Validar Roteiro -->
+        <section id="validate-script" class="section">
+            <h2>Validar Roteiro</h2>
+
+            <div class="form-group">
+                <label for="script-title">Título do Vídeo</label>
+                <input type="text" id="script-title" placeholder="Título do vídeo">
+            </div>
+
+            <div class="form-group">
+                <label for="script-content">Roteiro Completo</label>
+                <textarea id="script-content" rows="15" placeholder="Cole o roteiro aqui..."></textarea>
+            </div>
+
+            <div class="button-group">
+                <button onclick="app.goBack('dashboard')" class="btn btn-secondary">← Voltar</button>
+                <button onclick="app.validateScript()" class="btn btn-primary">Validar Roteiro</button>
+            </div>
+
+            <div id="script-validation-results" class="results-box" style="display: none;"></div>
+        </section>
+
+        <!-- Gerar Conteúdo Complementar -->
+        <section id="generate-content" class="section">
+            <h2>Gerar Conteúdo Complementar</h2>
+
+            <div class="form-group">
+                <label for="final-title">Título</label>
+                <input type="text" id="final-title" placeholder="Título do vídeo">
+            </div>
+
+            <div class="form-group">
+                <label for="final-script">Roteiro (opcional)</label>
+                <textarea id="final-script" rows="5" placeholder="Cole o roteiro aprovado (opcional)"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button onclick="app.goBack('dashboard')" class="btn btn-secondary">← Voltar</button>
+                <button onclick="app.generateContent()" class="btn btn-primary">Gerar Tudo</button>
+            </div>
+
+            <div id="content-generation-results" class="results-box" style="display: none;"></div>
+        </section>
+
+        <!-- Resumo do Canal -->
+        <section id="channel-summary" class="section">
+            <h2>Resumo do Canal</h2>
+            <div id="summary-content" class="summary-content"></div>
+            <button onclick="app.goBack('dashboard')" class="btn btn-secondary">← Voltar</button>
+        </section>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processando...</p>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
