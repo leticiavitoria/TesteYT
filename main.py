@@ -249,8 +249,8 @@ if __name__ == '__main__':
     print("\n✅ Sistema Adaptativo de Otimização de Conteúdo")
     print("✅ Análise Vetorial com Word2Vec e NLP")
     print("✅ Aprendizado Automático de Padrões")
-    print("\n📡 Servidor iniciando em http://localhost:5000")
+    print("\n📡 Servidor iniciando em http://localhost:5001")
     print("🌐 Acesse a interface web no navegador\n")
     print("=" * 60)
 
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
