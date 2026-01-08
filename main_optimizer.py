@@ -40,7 +40,7 @@ def index():
     return send_from_directory('frontend', 'index.html')
 
 
-@app.route('/api/v2/canal/criar', methods=['POST'])
+@app.route('/api/channel/create', methods=['POST'])
 def criar_canal():
     """
     Cria um novo canal com referências OBRIGATÓRIAS.
@@ -65,7 +65,7 @@ def criar_canal():
         data = request.json
 
         # Valida campos obrigatórios
-        campos_obrigatorios = ['nome', 'subnicho', 'resumo_ideia', 'referencias']
+        campos_obrigatorios = ['name', 'sub_niche', 'resumo_ideia', 'referencias']
         for campo in campos_obrigatorios:
             if campo not in data:
                 return jsonify({
@@ -99,7 +99,7 @@ def criar_canal():
         }), 500
 
 
-@app.route('/api/v2/titulo/analisar', methods=['POST'])
+@app.route('/api/titulo/analisar', methods=['POST'])
 def analisar_titulo():
     """
     Analisa um título gerando métricas avançadas conforme Parte 6 do documento.
@@ -151,7 +151,7 @@ def analisar_titulo():
         }), 500
 
 
-@app.route('/api/v2/titulos/listar', methods=['GET'])
+@app.route('/api/titulos/listar', methods=['GET'])
 def listar_titulos():
     """
     Lista todos os títulos aprovados e salvos no canal.
@@ -170,7 +170,7 @@ def listar_titulos():
         }), 500
 
 
-@app.route('/api/v2/roteiro/gerar-prompt', methods=['POST'])
+@app.route('/api/roteiro/gerar-prompt', methods=['POST'])
 def gerar_prompt_roteiro():
     """
     Gera prompt otimizado para criação de roteiro.
@@ -205,7 +205,7 @@ def gerar_prompt_roteiro():
         }), 500
 
 
-@app.route('/api/v2/roteiro/analisar', methods=['POST'])
+@app.route('/api/roteiro/analisar', methods=['POST'])
 def analisar_roteiro():
     """
     Analisa roteiro verificando coerência com título e canal.
@@ -251,7 +251,7 @@ def analisar_roteiro():
         }), 500
 
 
-@app.route('/api/v2/conteudo/gerar-complementar', methods=['POST'])
+@app.route('/api/conteudo/gerar-complementar', methods=['POST'])
 def gerar_conteudo_complementar():
     """
     Gera descrição, tags e prompt de thumbnail após roteiro aprovado.
@@ -286,7 +286,7 @@ def gerar_conteudo_complementar():
         }), 500
 
 
-@app.route('/api/v2/canal/estatisticas', methods=['GET'])
+@app.route('/api/canal/estatisticas', methods=['GET'])
 def get_estatisticas_canal():
     """
     Retorna estatísticas completas do canal e DNA Semântico.
@@ -312,7 +312,7 @@ def get_estatisticas_canal():
         }), 500
 
 
-@app.route('/api/v2/health', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
     return jsonify({
@@ -330,7 +330,7 @@ def health_check():
     })
 
 
-@app.route('/api/v2/documentacao', methods=['GET'])
+@app.route('/api/documentacao', methods=['GET'])
 def get_documentacao():
     """Retorna documentação da API"""
     return jsonify({
@@ -339,28 +339,28 @@ def get_documentacao():
 
         'workflow': {
             '1_criar_canal': {
-                'endpoint': 'POST /api/v2/canal/criar',
+                'endpoint': 'POST /api/channel/create',
                 'descricao': 'Cria canal com referências OBRIGATÓRIAS',
                 'obrigatorio': True,
                 'campos': ['nome', 'subnicho', 'resumo_ideia', 'referencias (min 3)']
             },
             '2_analisar_titulo': {
-                'endpoint': 'POST /api/v2/titulo/analisar',
+                'endpoint': 'POST /api/titulo/analisar',
                 'descricao': 'Analisa título com métricas avançadas',
                 'campos': ['titulo', 'salvar (opcional)']
             },
             '3_gerar_prompt_roteiro': {
-                'endpoint': 'POST /api/v2/roteiro/gerar-prompt',
+                'endpoint': 'POST /api/roteiro/gerar-prompt',
                 'descricao': 'Gera prompt otimizado para roteiro',
                 'campos': ['id_titulo OU titulo']
             },
             '4_analisar_roteiro': {
-                'endpoint': 'POST /api/v2/roteiro/analisar',
+                'endpoint': 'POST /api/roteiro/analisar',
                 'descricao': 'Valida roteiro vs título e canal',
                 'campos': ['titulo', 'roteiro', 'salvar (opcional)']
             },
             '5_gerar_complementar': {
-                'endpoint': 'POST /api/v2/conteudo/gerar-complementar',
+                'endpoint': 'POST /api/conteudo/gerar-complementar',
                 'descricao': 'Gera descrição, tags e thumbnail',
                 'campos': ['titulo', 'roteiro']
             }
@@ -402,9 +402,9 @@ if __name__ == '__main__':
     print("✅ Probabilidades de Entrega e Escala")
     print("")
     print("📡 Servidor iniciando em http://localhost:5000")
-    print("📖 Documentação: http://localhost:5000/api/v2/documentacao")
+    print("📖 Documentação: http://localhost:5000/api/documentacao")
     print("")
     print("=" * 80)
 
-    # Usa porta 5000 para não conflitar com o main.py original
+    # Usa porta 5001 para não conflitar com o main.py original
     app.run(debug=True, host='0.0.0.0', port=5000)
