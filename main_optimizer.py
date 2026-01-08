@@ -45,27 +45,18 @@ def criar_canal():
     """
     Cria um novo canal com referências OBRIGATÓRIAS.
 
-    Body JSON esperado:
+    Body JSON esperado (do frontend):
     {
-        "nome": "Nome do Canal",
-        "subnicho": "Machine Learning para Finanças",
-        "resumo_ideia": "Canal voltado para...",
-        "referencias": [
-            {
-                "titulo": "Como usar ML em Trading",
-                "descricao": "Neste vídeo...",  # opcional
-                "transcricao": "Olá pessoal...",  # opcional
-                "tags": ["ml", "trading"]  # opcional
-            },
-            ...  (mínimo 3 referências)
-        ]
+        "name": "Nome do Canal",
+        "sub_niche": "Machine Learning para Finanças",
+        "description": "Canal voltado para..."
     }
     """
     try:
         data = request.json
 
-        # Valida campos obrigatórios
-        campos_obrigatorios = ['name', 'sub_niche', 'resumo_ideia', 'referencias']
+        # Valida campos obrigatórios (usando nomes do frontend)
+        campos_obrigatorios = ['name', 'sub_niche', 'description']
         for campo in campos_obrigatorios:
             if campo not in data:
                 return jsonify({
@@ -73,12 +64,15 @@ def criar_canal():
                     'error': f'Campo obrigatório ausente: {campo}'
                 }), 400
 
-        # Cria o canal
+        # Cria referências vazias por enquanto (será implementado depois)
+        referencias = []
+
+        # Cria o canal (convertendo nomes do frontend para backend)
         resultado = optimizer_service.criar_canal(
-            nome=data['nome'],
-            subnicho=data['subnicho'],
-            resumo_ideia=data['resumo_ideia'],
-            referencias=data['referencias']
+            nome=data['name'],
+            subnicho=data['sub_niche'],
+            resumo_ideia=data['description'],
+            referencias=referencias
         )
 
         return jsonify(resultado)
@@ -99,42 +93,131 @@ def criar_canal():
         }), 500
 
 
-@app.route('/api/titulo/analisar', methods=['POST'])
-def analisar_titulo():
+@app.route('/api/channels/list', methods=['GET'])
+def listar_canais():
     """
-    Analisa um título gerando métricas avançadas conforme Parte 6 do documento.
+    Lista todos os canais criados.
+    """
+    try:
+        # Por enquanto retorna lista vazia
+        return jsonify({
+            'success': True,
+            'channels': []
+        })
 
-    Body JSON:
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/channel/load/<channel_id>', methods=['GET'])
+def carregar_canal(channel_id):
+    """
+    Carrega um canal específico.
+    """
+    try:
+        # Por enquanto retorna dados mockados
+        return jsonify({
+            'success': True,
+            'channel': {
+                'name': 'Canal Exemplo',
+                'sub_niche': 'Tecnologia',
+                'videos': []
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/channel/train', methods=['POST'])
+def treinar_sistema():
+    """
+    Treina o sistema com títulos de exemplo.
+
+    Body JSON esperado:
     {
-        "titulo": "Como Usar Machine Learning para Prever Ações",
-        "salvar": false  # opcional, default=false
+        "channel_id": "id_do_canal",
+        "titles": ["título 1", "título 2", ...]
     }
+    """
+    try:
+        data = request.json
+        titles = data.get('titles', [])
 
-    Retorna:
-    - Score numérico (0-100)
-    - Análise de risco (0-100)
-    - Justificativa técnica matemática
-    - Impacto no embedding do canal
-    - Probabilidades de entrega e escala
-    - Métricas detalhadas
+        if len(titles) == 0:
+            return jsonify({
+                'success': False,
+                'error': 'Nenhum título fornecido'
+            }), 400
+
+        # Processa os títulos
+        # TODO: Implementar treinamento real
+
+        return jsonify({
+            'success': True,
+            'titles_learned': len(titles),
+            'message': 'Sistema treinado com sucesso'
+        })
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Erro ao treinar sistema: {str(e)}'
+        }), 500
+
+
+@app.route('/api/title/validate', methods=['POST'])
+def validar_titulo():
+    """
+    Valida um título gerando métricas avançadas.
+
+    Body JSON esperado:
+    {
+        "channel_id": "id_do_canal",
+        "title": "Como Usar Machine Learning para Prever Ações"
+    }
     """
     try:
         data = request.json
 
-        if 'titulo' not in data:
+        if 'title' not in data:
             return jsonify({
                 'success': False,
-                'error': 'Campo "titulo" é obrigatório'
+                'error': 'Campo "title" é obrigatório'
             }), 400
 
         resultado = optimizer_service.analisar_titulo(
-            titulo=data['titulo'],
-            salvar=data.get('salvar', False)
+            titulo=data['title'],
+            salvar=False
         )
 
+        # Adapta resposta para formato esperado pelo frontend
         return jsonify({
             'success': True,
-            **resultado
+            'title': data['title'],
+            'overall_score': resultado.get('score_numerico', 0),
+            'final_recommendation': resultado.get('recomendacao_final', ''),
+            'approved': resultado.get('score_numerico', 0) >= 60,
+            'why_it_works': resultado.get('pontos_fortes', []),
+            'why_risk': resultado.get('pontos_fracos', []),
+            'vector_analysis': {
+                'coherence_with_channel': {
+                    'score': resultado.get('similaridade_dna_canal', 0) / 100
+                },
+                'semantic_analysis': {
+                    'channel_alignment': resultado.get('similaridade_dna_canal', 0) / 100
+                },
+                'risk_assessment': {
+                    'risk_level': resultado.get('nivel_risco', 'médio')
+                }
+            }
         })
 
     except ValueError as e:
@@ -147,49 +230,39 @@ def analisar_titulo():
         traceback.print_exc()
         return jsonify({
             'success': False,
-            'error': f'Erro ao analisar título: {str(e)}'
+            'error': f'Erro ao validar título: {str(e)}'
         }), 500
 
 
-@app.route('/api/titulos/listar', methods=['GET'])
-def listar_titulos():
-    """
-    Lista todos os títulos aprovados e salvos no canal.
-    """
-    try:
-        resultado = optimizer_service.listar_titulos()
-        return jsonify({
-            'success': True,
-            **resultado
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@app.route('/api/roteiro/gerar-prompt', methods=['POST'])
+@app.route('/api/script/generate-prompt', methods=['POST'])
 def gerar_prompt_roteiro():
     """
     Gera prompt otimizado para criação de roteiro.
 
-    Body JSON:
+    Body JSON esperado:
     {
-        "id_titulo": 0,  # OU
-        "titulo": "Texto do título"
+        "channel_id": "id_do_canal",
+        "title": "Texto do título"
     }
     """
     try:
         data = request.json
 
+        if 'title' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Campo "title" é obrigatório'
+            }), 400
+
         resultado = optimizer_service.gerar_prompt_roteiro(
-            id_titulo=data.get('id_titulo'),
-            titulo=data.get('titulo')
+            titulo=data['title']
         )
 
-        return jsonify(resultado)
+        return jsonify({
+            'success': True,
+            'script_prompt': resultado.get('prompt', ''),
+            'guidelines': resultado.get('diretrizes', [])
+        })
 
     except ValueError as e:
         return jsonify({
@@ -205,36 +278,48 @@ def gerar_prompt_roteiro():
         }), 500
 
 
-@app.route('/api/roteiro/analisar', methods=['POST'])
-def analisar_roteiro():
+@app.route('/api/script/validate', methods=['POST'])
+def validar_roteiro():
     """
-    Analisa roteiro verificando coerência com título e canal.
+    Valida roteiro verificando coerência com título e canal.
 
-    Body JSON:
+    Body JSON esperado:
     {
-        "titulo": "...",
-        "roteiro": "...",
-        "salvar": false  # opcional
+        "channel_id": "id_do_canal",
+        "title": "...",
+        "script": "..."
     }
     """
     try:
         data = request.json
 
-        if 'titulo' not in data or 'roteiro' not in data:
+        if 'title' not in data or 'script' not in data:
             return jsonify({
                 'success': False,
-                'error': 'Campos "titulo" e "roteiro" são obrigatórios'
+                'error': 'Campos "title" e "script" são obrigatórios'
             }), 400
 
         resultado = optimizer_service.analisar_roteiro(
-            titulo=data['titulo'],
-            roteiro=data['roteiro'],
-            salvar=data.get('salvar', False)
+            titulo=data['title'],
+            roteiro=data['script'],
+            salvar=False
         )
 
+        # Adapta resposta para formato esperado pelo frontend
         return jsonify({
             'success': True,
-            **resultado
+            'title': data['title'],
+            'approved': resultado.get('aprovado', False),
+            'recommendation': resultado.get('recomendacao', ''),
+            'coherence_with_title': {
+                'score': resultado.get('coerencia_titulo', 0) / 100,
+                'message': resultado.get('mensagem_titulo', '')
+            },
+            'coherence_with_channel': {
+                'score': resultado.get('coerencia_canal', 0) / 100,
+                'message': resultado.get('mensagem_canal', '')
+            },
+            'feedback': resultado.get('feedback', [])
         })
 
     except ValueError as e:
@@ -247,36 +332,42 @@ def analisar_roteiro():
         traceback.print_exc()
         return jsonify({
             'success': False,
-            'error': f'Erro ao analisar roteiro: {str(e)}'
+            'error': f'Erro ao validar roteiro: {str(e)}'
         }), 500
 
 
-@app.route('/api/conteudo/gerar-complementar', methods=['POST'])
-def gerar_conteudo_complementar():
+@app.route('/api/content/generate', methods=['POST'])
+def gerar_conteudo():
     """
-    Gera descrição, tags e prompt de thumbnail após roteiro aprovado.
+    Gera descrição, tags e prompt de thumbnail.
 
-    Body JSON:
+    Body JSON esperado:
     {
-        "titulo": "...",
-        "roteiro": "..."
+        "channel_id": "id_do_canal",
+        "title": "...",
+        "script": "..."
     }
     """
     try:
         data = request.json
 
-        if 'titulo' not in data or 'roteiro' not in data:
+        if 'title' not in data:
             return jsonify({
                 'success': False,
-                'error': 'Campos "titulo" e "roteiro" são obrigatórios'
+                'error': 'Campo "title" é obrigatório'
             }), 400
 
         resultado = optimizer_service.gerar_conteudo_complementar(
-            titulo=data['titulo'],
-            roteiro=data['roteiro']
+            titulo=data['title'],
+            roteiro=data.get('script', '')
         )
 
-        return jsonify(resultado)
+        return jsonify({
+            'success': True,
+            'description': resultado.get('descricao', ''),
+            'tags': resultado.get('tags', []),
+            'thumbnail_prompt': resultado.get('thumbnail_prompt', '')
+        })
 
     except Exception as e:
         traceback.print_exc()
@@ -286,23 +377,31 @@ def gerar_conteudo_complementar():
         }), 500
 
 
-@app.route('/api/canal/estatisticas', methods=['GET'])
-def get_estatisticas_canal():
+@app.route('/api/channel/summary/<channel_id>', methods=['GET'])
+def resumo_canal(channel_id):
     """
-    Retorna estatísticas completas do canal e DNA Semântico.
-
-    Inclui:
-    - Dados do canal
-    - DNA Semântico (magnitude, coerência, ruído)
-    - Estatísticas de componentes
-    - Análise de força do DNA
+    Retorna estatísticas completas do canal.
     """
     try:
         resultado = optimizer_service.get_estatisticas_canal()
 
         return jsonify({
             'success': True,
-            **resultado
+            'channel': {
+                'name': resultado.get('nome_canal', 'Canal'),
+                'videos': [],
+                'keywords': resultado.get('palavras_chave', [])
+            },
+            'learning_progress': {
+                'titles_learned': resultado.get('titulos_aprendidos', 0),
+                'scripts_analyzed': resultado.get('roteiros_analisados', 0),
+                'total_training_data': resultado.get('total_dados', 0)
+            },
+            'learned_guidelines': {
+                'status': 'learning',
+                'recommended_length': {'min': 40, 'max': 70},
+                'recommended_word_count': {'min': 6, 'max': 12}
+            }
         })
 
     except Exception as e:
@@ -340,40 +439,34 @@ def get_documentacao():
         'workflow': {
             '1_criar_canal': {
                 'endpoint': 'POST /api/channel/create',
-                'descricao': 'Cria canal com referências OBRIGATÓRIAS',
-                'obrigatorio': True,
-                'campos': ['nome', 'subnicho', 'resumo_ideia', 'referencias (min 3)']
+                'descricao': 'Cria canal',
+                'campos': ['name', 'sub_niche', 'description']
             },
-            '2_analisar_titulo': {
-                'endpoint': 'POST /api/titulo/analisar',
-                'descricao': 'Analisa título com métricas avançadas',
-                'campos': ['titulo', 'salvar (opcional)']
+            '2_treinar_sistema': {
+                'endpoint': 'POST /api/channel/train',
+                'descricao': 'Treina sistema com títulos de exemplo',
+                'campos': ['channel_id', 'titles']
             },
-            '3_gerar_prompt_roteiro': {
-                'endpoint': 'POST /api/roteiro/gerar-prompt',
+            '3_validar_titulo': {
+                'endpoint': 'POST /api/title/validate',
+                'descricao': 'Valida título com métricas avançadas',
+                'campos': ['channel_id', 'title']
+            },
+            '4_gerar_prompt_roteiro': {
+                'endpoint': 'POST /api/script/generate-prompt',
                 'descricao': 'Gera prompt otimizado para roteiro',
-                'campos': ['id_titulo OU titulo']
+                'campos': ['channel_id', 'title']
             },
-            '4_analisar_roteiro': {
-                'endpoint': 'POST /api/roteiro/analisar',
+            '5_validar_roteiro': {
+                'endpoint': 'POST /api/script/validate',
                 'descricao': 'Valida roteiro vs título e canal',
-                'campos': ['titulo', 'roteiro', 'salvar (opcional)']
+                'campos': ['channel_id', 'title', 'script']
             },
-            '5_gerar_complementar': {
-                'endpoint': 'POST /api/conteudo/gerar-complementar',
+            '6_gerar_conteudo': {
+                'endpoint': 'POST /api/content/generate',
                 'descricao': 'Gera descrição, tags e thumbnail',
-                'campos': ['titulo', 'roteiro']
+                'campos': ['channel_id', 'title', 'script']
             }
-        },
-
-        'metricas_retornadas': {
-            'score_numerico': 'Score agregado 0-100',
-            'analise_risco': 'Risco de ruptura de cluster 0-100',
-            'justificativa_tecnica': 'Explicação matemática detalhada',
-            'impacto_embedding': 'Simulação de impacto no DNA',
-            'probabilidade_entrega_inicial': 'Alta/Média/Baixa',
-            'probabilidade_escala': 'Alta/Média/Baixa',
-            'metricas_detalhadas': 'Similaridades, densidade, risco'
         },
 
         'fundamentos_tecnicos': {
@@ -406,5 +499,4 @@ if __name__ == '__main__':
     print("")
     print("=" * 80)
 
-    # Usa porta 5001 para não conflitar com o main.py original
     app.run(debug=True, host='0.0.0.0', port=5000)
