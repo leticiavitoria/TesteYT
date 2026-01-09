@@ -60,41 +60,28 @@ class YouTubeOptimizerService:
         nome: str,
         subnicho: str,
         resumo_ideia: str,
-        referencias: List[Dict]
+        referencias: List[Dict] = None
     ) -> Dict:
         """
         PARTE 3 - Função criar_canal()
 
-        Cria um novo canal com DNA Semântico baseado em referências obrigatórias.
+        Cria um novo canal. Pode ser criado com ou sem referências:
+        - COM referências: Canal totalmente treinado (modo completo)
+        - SEM referências: Canal criado mas precisa ser treinado depois (modo frontend)
 
         Args:
             nome: Nome do canal
             subnicho: Campo temático específico (ex: "Machine Learning para Finanças")
             resumo_ideia: Parágrafo descrevendo público-alvo, estilo e objetivos
-            referencias: Lista de dicionários com:
-                - 'titulo': str (OBRIGATÓRIO)
-                - 'descricao': str (opcional)
-                - 'transcricao': str (opcional)
-                - 'tags': List[str] (opcional)
+            referencias: Lista de dicionários com referências (opcional)
 
         Returns:
             Dicionário com status, canal criado e análise inicial
-
-        Raises:
-            ValueError: Se referências não forem fornecidas
         """
 
-        # Valida inputs obrigatórios
+        # Se não há referências, cria canal em modo "não treinado"
         if not referencias or len(referencias) == 0:
-            raise ValueError(
-                "❌ ERRO CRÍTICO: Referências são OBRIGATÓRIAS.\n\n"
-                "Para criar um canal, você DEVE fornecer referências de vídeos "
-                "de sucesso no seu nicho. Isso é essencial porque:\n\n"
-                "1. O sistema treina um modelo Word2Vec EXCLUSIVAMENTE com suas referências\n"
-                "2. Não usamos dados externos ou pré-definidos\n"
-                "3. Todo o universo semântico é inferido das referências\n\n"
-                "Forneça pelo menos 3-5 títulos de vídeos virais do seu nicho."
-            )
+            return self._criar_canal_sem_treinamento(nome, subnicho, resumo_ideia)
 
         # Converte referências para objetos Referencia
         refs_processadas = []
@@ -209,6 +196,109 @@ class YouTubeOptimizerService:
             ]
         }
 
+    def _criar_canal_sem_treinamento(
+        self,
+        nome: str,
+        subnicho: str,
+        resumo_ideia: str
+    ) -> Dict:
+        """
+        Cria um canal básico sem treinamento (para fluxo do frontend).
+        O canal será treinado depois com títulos de exemplo.
+        """
+
+        # Cria canal básico
+        self.canal_atual = Channel(
+            name=nome,
+            niche=subnicho,
+            sub_niche=subnicho,
+            description=resumo_ideia
+        )
+
+        # Inicializa DNA vazio (será preenchido no treinamento)
+        self.dna_canal = ChannelSemanticDNA()
+
+        return {
+            'success': True,
+            'channel_id': self.canal_atual.channel_id,
+            'message': f'✅ Canal "{nome}" criado com sucesso!',
+            'status': 'nao_treinado',
+            'proximos_passos': [
+                '1. Adicione títulos de vídeos de sucesso do seu nicho',
+                '2. Treine o sistema com esses exemplos',
+                '3. Comece a validar seus próprios títulos'
+            ]
+        }
+
+    def treinar_canal(
+        self,
+        titulos: List[str]
+    ) -> Dict:
+        """
+        Treina o canal com títulos de exemplo fornecidos pelo usuário.
+
+        Args:
+            titulos: Lista de títulos de vídeos de sucesso do nicho
+
+        Returns:
+            Resultado do treinamento
+        """
+
+        if not self.canal_atual:
+            raise ValueError("❌ Nenhum canal criado. Crie um canal primeiro.")
+
+        if len(titulos) < 3:
+            raise ValueError(
+                f"❌ Mínimo 3 títulos necessários para treinamento. Você forneceu {len(titulos)}."
+            )
+
+        # Converte títulos para referências
+        referencias = [
+            Referencia(titulo=titulo, descricao=None, transcricao=None, tags=None)
+            for titulo in titulos
+        ]
+
+        # Processa referências
+        print("🔄 Processando títulos e treinando Word2Vec...")
+        self.processador_referencias = ReferenceProcessor()
+
+        resultado_processamento = self.processador_referencias.processar_referencias(
+            referencias=referencias,
+            subnicho=self.canal_atual.sub_niche,
+            resumo_ideia=self.canal_atual.description
+        )
+
+        # Adiciona embeddings ao DNA
+        for ref in resultado_processamento['referencias_virais']:
+            self.dna_canal.adicionar_titulo(
+                ref['vetor_titulo'],
+                ref['titulo']
+            )
+
+        # Salva referências
+        self.referencias_virais = resultado_processamento['referencias_virais']
+
+        # Cria analisador de métricas
+        self.analisador_metricas = AdvancedMetricsAnalyzer(
+            dna_canal=self.dna_canal,
+            modelo_word2vec=resultado_processamento['word2vec_model']
+        )
+
+        # Atualiza keywords do canal
+        self.canal_atual.keywords = resultado_processamento['analise_inicial']['vocabulario_core']
+
+        return {
+            'success': True,
+            'titles_learned': len(titulos),
+            'message': '✅ Sistema treinado com sucesso!',
+            'analise_treinamento': {
+                'corpus_size': resultado_processamento['corpus_size'],
+                'vocabulario_size': resultado_processamento['vocab_size'],
+                'vocabulario_core': resultado_processamento['vocabulario_nicho'][:10],
+                'padroes_descobertos': resultado_processamento['analise_inicial']['padroes_titulo']
+            }
+        }
+
     def analisar_titulo(
         self,
         titulo: str,
@@ -227,9 +317,14 @@ class YouTubeOptimizerService:
             Análise completa com scores, justificativas e recomendações
         """
 
-        if not self.dna_canal or not self.analisador_metricas:
+        if not self.canal_atual:
             raise ValueError(
                 "❌ Nenhum canal criado. Use criar_canal() primeiro."
+            )
+
+        if not self.analisador_metricas:
+            raise ValueError(
+                "❌ Canal não treinado. Treine o sistema com títulos de exemplo primeiro."
             )
 
         # Gera embedding do título
@@ -250,6 +345,31 @@ class YouTubeOptimizerService:
             if self.canal_atual:
                 self.canal_atual.add_video({'titulo': titulo, 'status': 'titulo_aprovado'})
 
+        # Extrai pontos fortes e fracos da análise
+        pontos_fortes = []
+        pontos_fracos = []
+
+        # Analisa os scores para gerar pontos fortes e fracos
+        if analise.similaridade_dna_canal > 0.7:
+            pontos_fortes.append(f"Alta coerência com DNA do canal ({analise.similaridade_dna_canal:.1%})")
+        elif analise.similaridade_dna_canal < 0.4:
+            pontos_fracos.append(f"Baixa coerência com DNA do canal ({analise.similaridade_dna_canal:.1%})")
+
+        if analise.similaridade_titulos_virais > 0.6:
+            pontos_fortes.append(f"Alinhado com padrões de títulos de sucesso ({analise.similaridade_titulos_virais:.1%})")
+        elif analise.similaridade_titulos_virais < 0.3:
+            pontos_fracos.append(f"Distante dos padrões de sucesso do nicho ({analise.similaridade_titulos_virais:.1%})")
+
+        if analise.densidade_semantica > 0.6:
+            pontos_fortes.append(f"Boa densidade semântica - conceitos bem definidos")
+        elif analise.densidade_semantica < 0.3:
+            pontos_fracos.append(f"Densidade semântica baixa - conceitos dispersos")
+
+        if analise.risco_ruptura_cluster < 0.3:
+            pontos_fortes.append("Baixo risco de confundir o algoritmo")
+        elif analise.risco_ruptura_cluster > 0.7:
+            pontos_fracos.append("Alto risco de ruptura de cluster - pode confundir algoritmo")
+
         # Formata resposta conforme Parte 6 do documento
         return {
             'titulo': titulo,
@@ -258,6 +378,12 @@ class YouTubeOptimizerService:
             # Métricas principais (0-100)
             'score_numerico': round(analise.score_numerico, 2),
             'analise_risco': round(analise.analise_risco, 2),
+
+            # Para compatibilidade com frontend
+            'pontos_fortes': pontos_fortes if pontos_fortes else ["Título em análise"],
+            'pontos_fracos': pontos_fracos if pontos_fracos else ["Nenhum risco crítico identificado"],
+            'nivel_risco': 'baixo' if analise.analise_risco < 30 else 'médio' if analise.analise_risco < 70 else 'alto',
+            'similaridade_dna_canal': round(analise.similaridade_dna_canal * 100, 2),
 
             # Justificativa técnica detalhada
             'justificativa_tecnica': analise.justificativa_tecnica,

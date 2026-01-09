@@ -156,14 +156,16 @@ def treinar_sistema():
                 'error': 'Nenhum título fornecido'
             }), 400
 
-        # Processa os títulos
-        # TODO: Implementar treinamento real
+        # Treina o canal com os títulos fornecidos
+        resultado = optimizer_service.treinar_canal(titulos=titles)
 
+        return jsonify(resultado)
+
+    except ValueError as e:
         return jsonify({
-            'success': True,
-            'titles_learned': len(titles),
-            'message': 'Sistema treinado com sucesso'
-        })
+            'success': False,
+            'error': str(e)
+        }), 400
 
     except Exception as e:
         traceback.print_exc()
