@@ -82,25 +82,38 @@ class ChannelService:
         }
 
     def _extract_initial_keywords(self, description: str, sub_niche: str) -> List[str]:
-        """Extrai palavras-chave iniciais"""
-        import re
-        from collections import Counter
+        """Extrai palavras-chave iniciais usando processador de texto"""
+        from core.text_processor import TextProcessor
 
-        # Limpa e tokeniza
-        words = re.findall(r'\b\w+\b', description.lower())
-        words = [w for w in words if len(w) > 3]  # Remove palavras muito curtas
+        # Cria processador
+        processor = TextProcessor()
 
-        # Remove stopwords básicas
-        stopwords = {
-            'sobre', 'para', 'com', 'como', 'mais', 'muito', 'também',
-            'esse', 'esse', 'essa', 'seus', 'suas', 'nosso', 'nossa'
-        }
-        words = [w for w in words if w not in stopwords]
+        # Extrai palavras-chave da descrição
+        palavras_desc = processor.extrair_palavras_chave(
+            description,
+            min_length=3,
+            max_palavras=20
+        )
 
-        # Adiciona sub-nicho
-        keywords = [sub_niche] + list(set(words))[:10]
+        # Extrai palavras-chave do subnicho
+        palavras_nicho = processor.extrair_palavras_chave(
+            sub_niche,
+            min_length=3,
+            max_palavras=5
+        )
 
-        return keywords[:15]
+        # Combina e remove duplicatas
+        keywords = palavras_nicho + palavras_desc
+
+        # Remove duplicatas mantendo ordem
+        keywords_unicos = []
+        vistos = set()
+        for kw in keywords:
+            if kw not in vistos:
+                keywords_unicos.append(kw)
+                vistos.add(kw)
+
+        return keywords_unicos[:20]
 
     def add_example_titles(self, titles: List[str]) -> Dict:
         """

@@ -10,6 +10,16 @@ from sentence_transformers import SentenceTransformer
 import re
 from collections import defaultdict
 
+try:
+    from .text_processor import TextProcessor
+except ImportError:
+    # Fallback if module doesn't exist yet
+    class TextProcessor:
+        def tokenizar_para_word2vec(self, texto):
+            return texto.lower().split()
+        def extrair_palavras_chave(self, texto, **kwargs):
+            return [w for w in texto.lower().split() if len(w) >= 3]
+
 
 class AdaptiveVectorAnalyzer:
     """
@@ -43,6 +53,9 @@ class AdaptiveVectorAnalyzer:
         # Corpus para treinar Word2Vec
         self.training_corpus = []
 
+        # Text processor with stopwords
+        self.text_processor = TextProcessor()
+
     def add_training_data(self, text: str, content_type: str):
         """
         Adiciona dados para treinar o modelo.
@@ -68,12 +81,10 @@ class AdaptiveVectorAnalyzer:
             self._train_word2vec()
 
     def _preprocess_text(self, text: str) -> List[str]:
-        """Preprocessa texto mantendo contexto"""
-        # Remove pontuação mas mantém estrutura
-        text = text.lower()
-        # Tokeniza mantendo palavras compostas importantes
-        tokens = re.findall(r'\b\w+\b', text)
-        return tokens
+        """Preprocessa texto removendo stopwords e mantendo termos relevantes"""
+        # Usa o processador de texto para tokenizar
+        tokens = self.text_processor.tokenizar_para_word2vec(text)
+        return tokens if tokens else text.lower().split()
 
     def _train_word2vec(self):
         """
